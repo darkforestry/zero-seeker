@@ -1,4 +1,5 @@
 use clap::{App, Arg};
+use sha3::{Digest, Sha3_256};
 
 fn main() {
     let matches = App::new("ZeroSeeker")
@@ -30,5 +31,16 @@ fn main() {
         .expect("Zero bytes must be a number");
 
     println!("Entropy seed: {}", entropy_seed);
+    println!("Hashed entropy seed: {}", hash_entropy_seed(entropy_seed));
     println!("Zero bytes: {}", zero_bytes);
+}
+
+fn hash_entropy_seed(seed: &str) -> String {
+    // Hash the random string using SHA3-256
+    let mut hasher = Sha3_256::new();
+    hasher.update(seed.as_bytes());
+    let hash = hasher.finalize();
+
+    // Return the hash as a hex-encoded string
+    format!("{:x}", hash)
 }

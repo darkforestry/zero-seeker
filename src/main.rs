@@ -8,6 +8,7 @@ use std::error::Error;
 use std::str::FromStr;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
+use std::time::Instant;
 use tiny_keccak::{Hasher, Keccak};
 
 fn main() {
@@ -36,6 +37,7 @@ fn main() {
         "Generating address with {} zero bytes...",
         matches.value_of("zero_bytes").unwrap()
     );
+    let start_time = Instant::now();
 
     let entropy_seed = matches.value_of("entropy_seed").unwrap();
     let zero_bytes: u8 = matches
@@ -67,9 +69,16 @@ fn main() {
     });
 
     if let Some((private_key, contract_address)) = result {
+        let elapsed_time = start_time.elapsed();
         println!(
-            "Found address with {} zero bytes: {:?}",
-            zero_bytes, contract_address
+            "Successfully generated in {} seconds",
+            elapsed_time.as_secs()
+        );
+        println!(
+            "Found address with {} zero bytes in {} seconds: {:?}",
+            zero_bytes,
+            elapsed_time.as_secs(),
+            contract_address
         );
         println!("Private key: {}", format!("0x{}", private_key));
     } else {

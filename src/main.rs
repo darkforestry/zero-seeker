@@ -67,8 +67,8 @@ fn main() {
         let nonce_step = num_threads as u32;
 
         let mut private_key = hash_entropy_seed(entropy_seed);
-        let mut address = address_from_private_key(&private_key).unwrap();
-        let mut contract_address = contract_address_from_sender(&address);
+        let mut address;
+        let mut contract_address;
         let mut zero_byte_count: u8 = 0;
 
         while zero_byte_count < zero_bytes && !found.load(Ordering::Relaxed) {

@@ -1,7 +1,8 @@
 use clap::{App, Arg};
 use ethers::types::H160;
 use libsecp256k1::{PublicKey, SecretKey};
-use sha3::{Digest, Sha3_256};
+use rlp::RlpStream;
+use sha3::{Digest, Keccak256, Sha3_256};
 use std::error::Error;
 use tiny_keccak::{Hasher, Keccak};
 
@@ -38,7 +39,13 @@ fn main() {
     println!("Hashed entropy seed: {}", hash_entropy_seed(entropy_seed));
     println!(
         "Address from private key: {:?}",
-        address_from_private_key(&hash_entropy_seed(entropy_seed))
+        address_from_private_key(&hash_entropy_seed(entropy_seed)).unwrap()
+    );
+    println!(
+        "Contract address from sender: {:?}",
+        contract_address_from_sender(
+            &address_from_private_key(&hash_entropy_seed(entropy_seed)).unwrap()
+        )
     );
     println!("Zero bytes: {}", zero_bytes);
 }
@@ -75,4 +82,21 @@ fn address_from_private_key(private_key: &str) -> Result<H160, Box<dyn Error>> {
     address.assign_from_slice(&hash[12..]);
 
     Ok(address)
+}
+
+fn contract_address_from_sender(sender: &H160) -> H160 {
+    // RLP encode the sender address and a nonce of 0
+    let mut rlp_stream = RlpStream::new_list(2);
+    rlp_stream.append(&sender.as_bytes());
+    rlp_stream.append(&0u64);
+
+    let encoded = rlp_stream.out();
+
+    // Hash the RLP encoded data using Keccak-256
+    let mut hasher = Keccak256::new();
+    hasher.update(encoded);
+    let hash = hasher.finalize();
+
+    // The last 20 bytes of the hash are the contract address
+    H160::from_slice(&hash.as_slice()[12..])
 }

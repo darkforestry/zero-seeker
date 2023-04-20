@@ -794,7 +794,7 @@ dependencies = [
  "k256",
  "log",
  "rand 0.8.5",
- "rlp",
+ "rlp 0.5.2",
  "serde",
  "sha3",
  "zeroize",
@@ -1001,7 +1001,7 @@ dependencies = [
  "once_cell",
  "open-fastrlp",
  "rand 0.8.5",
- "rlp",
+ "rlp 0.5.2",
  "serde",
  "serde_json",
  "strum",
@@ -1619,7 +1619,7 @@ version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f28220f89297a075ddc7245cd538076ee98b01f2a9c23a53a4f1105d5a322808"
 dependencies = [
- "rlp",
+ "rlp 0.5.2",
 ]
 
 [[package]]
@@ -2575,6 +2575,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "bd124222d17ad93a644ed9d011a40f4fb64aa54275c08cc216524a9ea82fb09f"
 dependencies = [
  "digest 0.10.6",
+]
+
+[[package]]
+name = "rlp"
+version = "0.4.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1190dcc8c3a512f1eef5d09bb8c84c7f39e1054e174d1795482e18f5272f2e73"
+dependencies = [
+ "rustc-hex",
 ]
 
 [[package]]
@@ -3820,6 +3829,7 @@ dependencies = [
  "ethers",
  "hex",
  "libsecp256k1",
+ "rlp 0.4.6",
  "sha3",
  "tiny-keccak",
 ]

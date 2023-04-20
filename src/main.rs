@@ -128,14 +128,16 @@ fn mine_address_with_n_zero_bytes(
 
     let result: Option<(String, H160)> = (0..num_threads).into_par_iter().find_map_any(|_| {
         let nonce_step = num_threads as u32;
+        let mut counter = 0u128;
 
-        let mut private_key = hash_entropy_seed(entropy_seed);
+        let mut private_key = hash_entropy_seed(entropy_seed, counter);
         let mut address_buf = H160::default(); // Allocate the address buffer once, outside the loop
         let mut contract_address_buf = H160::default(); // Allocate the contract address buffer once, outside the loop
         let mut zero_byte_count: u8 = 0;
 
         while zero_byte_count < zero_bytes && !found.load(Ordering::Relaxed) {
-            private_key = increment_hex_string(&private_key, nonce_step);
+            counter += nonce_step as u128;
+            private_key = hash_entropy_seed(entropy_seed, counter);
             address_from_private_key(&private_key, &mut address_buf).unwrap();
             contract_address_from_sender(&address_buf, &mut contract_address_buf);
             if leading {
@@ -156,10 +158,11 @@ fn mine_address_with_n_zero_bytes(
     result
 }
 
-fn hash_entropy_seed(seed: &str) -> String {
+fn hash_entropy_seed(seed: &str, counter: u128) -> String {
     // Hash the random string using SHA3-256
     let mut hasher = Sha3_256::new();
     hasher.update(seed.as_bytes());
+    hasher.update(&counter.to_le_bytes()); // Add the counter to the input data
     let hash = hasher.finalize();
 
     // Return the hash as a hex-encoded string
@@ -219,15 +222,4 @@ fn count_leading_zero_bytes(address: &H160) -> u8 {
         .iter()
         .take_while(|&byte| *byte == 0)
         .count() as u8
-}
-
-fn increment_hex_string(hex_string: &str, step: u32) -> String {
-    // Parse the hex string as a U256
-    let value = U256::from_str(hex_string).unwrap();
-
-    // Increment the U256
-    let incremented = value + U256::from(step);
-
-    // Return incremented U256 as a hex string
-    format!("{incremented:064x}")
 }

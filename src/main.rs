@@ -1,10 +1,13 @@
 use clap::{App, Arg};
 use ethers::types::{H160, U256};
 use libsecp256k1::{PublicKey, SecretKey};
+use rayon::prelude::*;
 use rlp::RlpStream;
 use sha3::{Digest, Keccak256, Sha3_256};
 use std::error::Error;
 use std::str::FromStr;
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::Arc;
 use tiny_keccak::{Hasher, Keccak};
 
 fn main() {
@@ -41,23 +44,37 @@ fn main() {
         .parse()
         .expect("Zero bytes must be a number");
 
-    let mut private_key = hash_entropy_seed(entropy_seed);
-    let mut address = address_from_private_key(&private_key).unwrap();
-    let mut contract_address = contract_address_from_sender(&address);
-    let mut zero_byte_count: u8 = 0;
+    let num_threads = num_cpus::get();
+    let found = Arc::new(AtomicBool::new(false));
 
-    while zero_byte_count < zero_bytes {
-        private_key = increment_hex_string(&private_key);
-        address = address_from_private_key(&private_key).unwrap();
-        contract_address = contract_address_from_sender(&address);
-        zero_byte_count = count_zero_bytes(&contract_address);
+    let result: Option<(String, H160)> = (0..num_threads).into_par_iter().find_map_any(|_| {
+        let nonce_step = num_threads as u32;
+
+        let mut private_key = hash_entropy_seed(entropy_seed);
+        let mut address = address_from_private_key(&private_key).unwrap();
+        let mut contract_address = contract_address_from_sender(&address);
+        let mut zero_byte_count: u8 = 0;
+
+        while zero_byte_count < zero_bytes && !found.load(Ordering::Relaxed) {
+            private_key = increment_hex_string(&private_key, nonce_step);
+            address = address_from_private_key(&private_key).unwrap();
+            contract_address = contract_address_from_sender(&address);
+            zero_byte_count = count_zero_bytes(&contract_address);
+        }
+
+        found.store(true, Ordering::Relaxed);
+        return Some((private_key, contract_address));
+    });
+
+    if let Some((private_key, contract_address)) = result {
+        println!(
+            "Found address with {} zero bytes: {:?}",
+            zero_bytes, contract_address
+        );
+        println!("Private key: {}", format!("0x{}", private_key));
+    } else {
+        println!("No matching address found.");
     }
-
-    println!(
-        "Found address with {} zero bytes: {:?}",
-        zero_byte_count, contract_address
-    );
-    println!("Private key: {}", format!("0x{}", private_key));
 }
 
 fn hash_entropy_seed(seed: &str) -> String {
@@ -115,12 +132,12 @@ fn count_zero_bytes(address: &H160) -> u8 {
     address.as_bytes().iter().filter(|&byte| *byte == 0).count() as u8
 }
 
-fn increment_hex_string(hex_string: &str) -> String {
+fn increment_hex_string(hex_string: &str, step: u32) -> String {
     // Parse the hex string as a U256
     let value = U256::from_str(&hex_string).unwrap();
 
     // Increment the U256
-    let incremented = value + U256::one();
+    let incremented = value + U256::from(step);
 
     // Return incremented U256 as a hex string
     format!("{:064x}", incremented)

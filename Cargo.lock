@@ -3829,6 +3829,8 @@ dependencies = [
  "ethers",
  "hex",
  "libsecp256k1",
+ "num_cpus",
+ "rayon",
  "rlp 0.4.6",
  "sha3",
  "tiny-keccak",

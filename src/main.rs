@@ -111,7 +111,7 @@ fn main() {
                 contract_address
             );
         }
-        println!("Private key: {}", format!("0x{}", private_key));
+        println!("Private key: 0x{private_key}");
     } else {
         println!("No matching address found.");
     }
@@ -124,7 +124,7 @@ fn hash_entropy_seed(seed: &str) -> String {
     let hash = hasher.finalize();
 
     // Return the hash as a hex-encoded string
-    format!("{:064x}", hash)
+    format!("{hash:064x}")
 }
 
 fn address_from_private_key(private_key: &str) -> Result<H160, Box<dyn Error>> {
@@ -182,11 +182,11 @@ fn count_leading_zero_bytes(address: &H160) -> u8 {
 
 fn increment_hex_string(hex_string: &str, step: u32) -> String {
     // Parse the hex string as a U256
-    let value = U256::from_str(&hex_string).unwrap();
+    let value = U256::from_str(hex_string).unwrap();
 
     // Increment the U256
     let incremented = value + U256::from(step);
 
     // Return incremented U256 as a hex string
-    format!("{:064x}", incremented)
+    format!("{incremented:064x}")
 }

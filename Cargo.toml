@@ -6,7 +6,7 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-clap = "2.33.3"
+clap = {version ="4.1.4", features = ["derive"]}
 sha3 = "0.10.7"
 libsecp256k1 = "0.6.0"
 tiny-keccak = { version = "2.0.2", features = ["keccak"] }
@@ -15,3 +15,14 @@ ethers = "2.0.3"
 rlp = "0.4.6"
 rayon = "1.5.1"
 num_cpus = "1.13.0"
+criterion = "0.4.0"
+
+
+[[bin]]
+path = "bin/zero_seeker.rs"
+name = "zero_seeker"
+
+
+[[bench]]
+name  = "benchmarks"
+harness = false

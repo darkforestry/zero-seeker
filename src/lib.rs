@@ -51,7 +51,7 @@ fn mine_address_with_n_zero_bytes(
     result
 }
 
-fn hash_entropy_seed(seed: &str, counter: u128) -> String {
+pub fn hash_entropy_seed(seed: &str, counter: u128) -> String {
     // Hash the random string using SHA3-256
     let mut hasher = Sha3_256::new();
     hasher.update(seed.as_bytes());
@@ -62,7 +62,7 @@ fn hash_entropy_seed(seed: &str, counter: u128) -> String {
     format!("{hash:064x}")
 }
 
-fn address_from_private_key(
+pub fn address_from_private_key(
     private_key: &str,
     address_buf: &mut H160,
 ) -> Result<(), Box<dyn Error>> {
@@ -88,7 +88,7 @@ fn address_from_private_key(
     Ok(())
 }
 
-fn contract_address_from_sender(sender: &H160, contract_address_buf: &mut H160) {
+pub fn contract_address_from_sender(sender: &H160, contract_address_buf: &mut H160) {
     // RLP encode the sender address and a nonce of 0
     let mut rlp_stream = RlpStream::new_list(2);
     rlp_stream.append(&sender.as_bytes());
@@ -105,11 +105,11 @@ fn contract_address_from_sender(sender: &H160, contract_address_buf: &mut H160) 
     contract_address_buf.assign_from_slice(&hash.as_slice()[12..])
 }
 
-fn count_zero_bytes(address: &H160) -> u8 {
+pub fn count_zero_bytes(address: &H160) -> u8 {
     address.as_bytes().iter().filter(|&byte| *byte == 0).count() as u8
 }
 
-fn count_leading_zero_bytes(address: &H160) -> u8 {
+pub fn count_leading_zero_bytes(address: &H160) -> u8 {
     address
         .as_bytes()
         .iter()

@@ -42,12 +42,6 @@ fn main() {
         )
         .get_matches();
 
-    println!(
-        "Generating address with {} zero bytes...",
-        matches.value_of("zero_bytes").unwrap()
-    );
-    let start_time = Instant::now();
-
     let entropy_seed = matches.value_of("entropy_seed").unwrap();
     let zero_bytes: u8 = matches
         .value_of("zero_bytes")
@@ -60,6 +54,75 @@ fn main() {
         .parse()
         .expect("Leading must be a boolean");
 
+    if leading {
+        println!(
+            "Generating address with {} leading zero bytes...",
+            matches.value_of("zero_bytes").unwrap()
+        );
+    } else {
+        println!(
+            "Generating address with {} total zero bytes...",
+            matches.value_of("zero_bytes").unwrap()
+        );
+    }
+
+    let lower_complexity: u8 = 2;
+
+    // Run the search for the lower complexity value
+    let start_time = Instant::now();
+    mine_address_with_n_zero_bytes(entropy_seed, lower_complexity, leading);
+    let elapsed_time = start_time.elapsed();
+
+    // Calculate the ratio between the probabilities for the lower and target complexity values
+    let ratio =
+        (1.0 / 256.0f64.powi(lower_complexity as i32)) / (1.0 / 256.0f64.powi(zero_bytes as i32));
+
+    // Estimate the time it would take to find a matching Ethereum address for the desired complexity value
+    let estimated_time = elapsed_time.as_secs_f64() * ratio;
+
+    let estimated_seconds = estimated_time as u64;
+    let (days, hours, minutes, seconds) = {
+        let (days, remainder) = (estimated_seconds / 86_400, estimated_seconds % 86_400);
+        let (hours, remainder) = (remainder / 3_600, remainder % 3_600);
+        let (minutes, seconds) = (remainder / 60, remainder % 60);
+        (days, hours, minutes, seconds)
+    };
+
+    println!(
+        "Estimated time to find an address with {} zero bytes: {} days, {} hours, {} minutes, and {} seconds",
+        zero_bytes, days, hours, minutes, seconds
+    );
+
+    let result = mine_address_with_n_zero_bytes(entropy_seed, zero_bytes, leading);
+
+    if let Some((private_key, contract_address)) = result {
+        let elapsed_time = start_time.elapsed();
+        if leading {
+            println!(
+                "Found address with {} leading zero bytes in {} seconds: {:?}",
+                zero_bytes,
+                elapsed_time.as_secs(),
+                contract_address
+            );
+        } else {
+            println!(
+                "Found address with {} zero bytes in {} seconds: {:?}",
+                zero_bytes,
+                elapsed_time.as_secs(),
+                contract_address
+            );
+        }
+        println!("Private key: 0x{private_key}");
+    } else {
+        println!("No matching address found.");
+    }
+}
+
+fn mine_address_with_n_zero_bytes(
+    entropy_seed: &str,
+    zero_bytes: u8,
+    leading: bool,
+) -> Option<(String, H160)> {
     let num_threads = num_cpus::get();
     let found = Arc::new(AtomicBool::new(false));
 
@@ -90,27 +153,7 @@ fn main() {
         None
     });
 
-    if let Some((private_key, contract_address)) = result {
-        let elapsed_time = start_time.elapsed();
-        if leading {
-            println!(
-                "Found address with {} leading zero bytes in {} seconds: {:?}",
-                zero_bytes,
-                elapsed_time.as_secs(),
-                contract_address
-            );
-        } else {
-            println!(
-                "Found address with {} zero bytes in {} seconds: {:?}",
-                zero_bytes,
-                elapsed_time.as_secs(),
-                contract_address
-            );
-        }
-        println!("Private key: 0x{private_key}");
-    } else {
-        println!("No matching address found.");
-    }
+    result
 }
 
 fn hash_entropy_seed(seed: &str) -> String {

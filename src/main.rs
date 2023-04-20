@@ -66,7 +66,7 @@ fn main() {
         );
     }
 
-    let lower_complexity: u8 = 2;
+    let lower_complexity: u8 = 3;
 
     // Run the search for the lower complexity value
     let start_time = Instant::now();

@@ -62,10 +62,14 @@ fn main() {
             address = address_from_private_key(&private_key).unwrap();
             contract_address = contract_address_from_sender(&address);
             zero_byte_count = count_zero_bytes(&contract_address);
+
+            if zero_byte_count >= zero_bytes {
+                found.store(true, Ordering::Relaxed);
+                return Some((private_key, contract_address));
+            }
         }
 
-        found.store(true, Ordering::Relaxed);
-        return Some((private_key, contract_address));
+        None
     });
 
     if let Some((private_key, contract_address)) = result {

@@ -99,13 +99,23 @@ pub fn contract_address_from_sender(sender: &H160, contract_address_buf: &mut H1
 }
 
 pub fn count_zero_bytes(address: &H160) -> u8 {
-    address.as_bytes().iter().filter(|&byte| *byte == 0).count() as u8
+    let mut count = 0;
+    for b in address.0.iter() {
+        if *b == 0 as u8 {
+            count += 1
+        }
+    }
+    count
 }
 
 pub fn count_leading_zero_bytes(address: &H160) -> u8 {
-    address
-        .as_bytes()
-        .iter()
-        .take_while(|&byte| *byte == 0)
-        .count() as u8
+    let mut count = 0;
+    for b in address.0.iter() {
+        if *b == 0 as u8 {
+            count += 1
+        } else {
+            break;
+        }
+    }
+    count
 }

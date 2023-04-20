@@ -10,7 +10,11 @@ pub fn count_leading_zero_bytes_benchmark(c: &mut Criterion) {
 }
 
 pub fn count_zero_bytes_benchmark(c: &mut Criterion) {
-    c.bench_function("Count zero bytes", |b| b.iter(|| todo!()));
+    let zero_address = H160::zero();
+
+    c.bench_function("Count zero bytes", |b| {
+        b.iter(|| zero_seeker::count_zero_bytes(&zero_address))
+    });
 }
 
 criterion_group!(

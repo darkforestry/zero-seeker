@@ -17,6 +17,10 @@ rayon = "1.5.1"
 num_cpus = "1.13.0"
 criterion = "0.4.0"
 
+[profile.release]
+codegen-units = 1
+lto = "fat"
+panic = "abort"
 
 [[bin]]
 path = "bin/zero_seeker.rs"

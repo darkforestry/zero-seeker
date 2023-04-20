@@ -92,10 +92,6 @@ fn main() {
 
     if let Some((private_key, contract_address)) = result {
         let elapsed_time = start_time.elapsed();
-        println!(
-            "Successfully generated in {} seconds",
-            elapsed_time.as_secs()
-        );
         if leading {
             println!(
                 "Found address with {} leading zero bytes in {} seconds: {:?}",

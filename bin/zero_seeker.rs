@@ -1,15 +1,4 @@
-use clap::Arg;
-use ethers::types::{H160, U256};
-use libsecp256k1::{PublicKey, SecretKey};
-use rayon::prelude::*;
-use rlp::RlpStream;
-use sha3::{Digest, Keccak256, Sha3_256};
-use std::error::Error;
-use std::str::FromStr;
-use std::sync::atomic::{AtomicBool, Ordering};
-use std::sync::Arc;
 use std::time::Instant;
-use tiny_keccak::{Hasher, Keccak};
 
 use clap::Parser;
 #[derive(Parser, Default, Debug)]

@@ -1,14 +1,11 @@
-use clap::Arg;
-use ethers::types::{H160, U256};
+use ethers::types::H160;
 use libsecp256k1::{PublicKey, SecretKey};
 use rayon::prelude::*;
 use rlp::RlpStream;
 use sha3::{Digest, Keccak256, Sha3_256};
 use std::error::Error;
-use std::str::FromStr;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
-use std::time::Instant;
 use tiny_keccak::{Hasher, Keccak};
 
 pub fn mine_address_with_n_zero_bytes(
@@ -55,7 +52,7 @@ pub fn hash_entropy_seed(seed: &str, counter: u128) -> String {
     // Hash the random string using SHA3-256
     let mut hasher = Sha3_256::new();
     hasher.update(seed.as_bytes());
-    hasher.update(&counter.to_le_bytes()); // Add the counter to the input data
+    hasher.update(counter.to_le_bytes()); // Add the counter to the input data
     let hash = hasher.finalize();
 
     // Return the hash as a hex-encoded string

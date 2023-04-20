@@ -13,10 +13,10 @@ ZeroSeeker is a Rust-based command-line utility that generates Ethereum contract
 To use ZeroSeeker, run the following command:
 
 ```sh
-cargo run --release -- -s "your_entropy_seed" -z number_of_zero_bytes [-l (true|false)]
+cargo run --release -- -e "your_entropy_seed" -z number_of_zero_bytes [-l]
 ```
 
-Replace your_entropy_seed with a string that will be used as a seed for generating the private key, and number_of_zero_bytes with the desired number of zero bytes in the contract address. Use the -l flag followed by true or false to specify if you want to count leading zero bytes (true) or total zero bytes (false). If the -l flag is not provided, the default is false.
+Replace your_entropy_seed with a string that will be used as a seed for generating the private key, and number_of_zero_bytes with the desired number of zero bytes in the contract address. Use the -l flag to specify if you want to count leading zero bytes (flag) or total zero bytes (no flag).
 
 ## Todo
 

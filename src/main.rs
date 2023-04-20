@@ -48,6 +48,14 @@ fn main() {
         )
     );
     println!("Zero bytes: {}", zero_bytes);
+    println!(
+        "Count zero bytes: {}",
+        count_zero_bytes(
+            &"0x00f9c3839cd99643aeb665093520f900461ee100"
+                .parse::<H160>()
+                .unwrap()
+        )
+    )
 }
 
 fn hash_entropy_seed(seed: &str) -> String {
@@ -99,4 +107,8 @@ fn contract_address_from_sender(sender: &H160) -> H160 {
 
     // The last 20 bytes of the hash are the contract address
     H160::from_slice(&hash.as_slice()[12..])
+}
+
+fn count_zero_bytes(address: &H160) -> usize {
+    address.as_bytes().iter().filter(|&byte| *byte == 0).count()
 }

@@ -95,16 +95,12 @@ fn main() {
         if leading {
             println!(
                 "Found address with {} leading zero bytes in {} seconds: {:?}",
-                zero_bytes,
-                elapsed_time.as_secs(),
-                contract_address
+                zero_bytes, elapsed_time, contract_address
             );
         } else {
             println!(
                 "Found address with {} zero bytes in {} seconds: {:?}",
-                zero_bytes,
-                elapsed_time.as_secs(),
-                contract_address
+                zero_bytes, elapsed_time, contract_address
             );
         }
         println!("Private key: 0x{private_key}");

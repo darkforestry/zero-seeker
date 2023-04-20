@@ -15,19 +15,21 @@ pub struct Args {
 
 fn main() {
     let args = Args::parse();
+
+    let lower_complexity: u8;
     if args.leading {
+        lower_complexity = 2;
         println!(
             "Generating address with {} leading zero bytes...",
             args.zero_bytes
         );
     } else {
+        lower_complexity = 3;
         println!(
             "Generating address with {} total zero bytes...",
             args.zero_bytes
         );
     }
-
-    let lower_complexity: u8 = 3;
 
     // Run the search for the lower complexity value
     let start_time = Instant::now();

@@ -130,23 +130,23 @@ fn mine_address_with_n_zero_bytes(
         let nonce_step = num_threads as u32;
 
         let mut private_key = hash_entropy_seed(entropy_seed);
-        let mut address;
-        let mut contract_address;
+        let mut address_buf = H160::default(); // Allocate the address buffer once, outside the loop
+        let mut contract_address_buf = H160::default(); // Allocate the contract address buffer once, outside the loop
         let mut zero_byte_count: u8 = 0;
 
         while zero_byte_count < zero_bytes && !found.load(Ordering::Relaxed) {
             private_key = increment_hex_string(&private_key, nonce_step);
-            address = address_from_private_key(&private_key).unwrap();
-            contract_address = contract_address_from_sender(&address);
+            address_from_private_key(&private_key, &mut address_buf).unwrap();
+            contract_address_from_sender(&address_buf, &mut contract_address_buf);
             if leading {
-                zero_byte_count = count_leading_zero_bytes(&contract_address);
+                zero_byte_count = count_leading_zero_bytes(&contract_address_buf);
             } else {
-                zero_byte_count = count_zero_bytes(&contract_address);
+                zero_byte_count = count_zero_bytes(&contract_address_buf);
             }
 
             if zero_byte_count >= zero_bytes {
                 found.store(true, Ordering::Relaxed);
-                return Some((private_key, contract_address));
+                return Some((private_key, contract_address_buf));
             }
         }
 
@@ -166,7 +166,10 @@ fn hash_entropy_seed(seed: &str) -> String {
     format!("{hash:064x}")
 }
 
-fn address_from_private_key(private_key: &str) -> Result<H160, Box<dyn Error>> {
+fn address_from_private_key(
+    private_key: &str,
+    address_buf: &mut H160,
+) -> Result<(), Box<dyn Error>> {
     // Parse the private key string to bytes and create a SecretKey
     let private_key_bytes = hex::decode(private_key)?;
     let secret_key = SecretKey::parse_slice(&private_key_bytes)?;
@@ -183,14 +186,13 @@ fn address_from_private_key(private_key: &str) -> Result<H160, Box<dyn Error>> {
     hasher.update(&serialized_pubkey[1..]); // Skip the first byte, as it only indicates the format
     hasher.finalize(&mut hash);
 
-    // Calculate the Ethereum address from the hash
-    let mut address = H160::default();
-    address.assign_from_slice(&hash[12..]);
+    // Retrieve the Ethereum address from the hash
+    address_buf.assign_from_slice(&hash[12..]);
 
-    Ok(address)
+    Ok(())
 }
 
-fn contract_address_from_sender(sender: &H160) -> H160 {
+fn contract_address_from_sender(sender: &H160, contract_address_buf: &mut H160) {
     // RLP encode the sender address and a nonce of 0
     let mut rlp_stream = RlpStream::new_list(2);
     rlp_stream.append(&sender.as_bytes());
@@ -204,7 +206,7 @@ fn contract_address_from_sender(sender: &H160) -> H160 {
     let hash = hasher.finalize();
 
     // The last 20 bytes of the hash are the contract address
-    H160::from_slice(&hash.as_slice()[12..])
+    contract_address_buf.assign_from_slice(&hash.as_slice()[12..])
 }
 
 fn count_zero_bytes(address: &H160) -> u8 {

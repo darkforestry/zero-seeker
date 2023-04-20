@@ -38,7 +38,7 @@ pub fn mine_address_with_n_zero_bytes(
 
             if zero_byte_count >= zero_bytes {
                 found.store(true, Ordering::Relaxed);
-                return Some((private_key, contract_address_buf));
+                return Some((hex::encode(private_key), contract_address_buf));
             }
         }
 
@@ -48,24 +48,20 @@ pub fn mine_address_with_n_zero_bytes(
     result
 }
 
-pub fn hash_entropy_seed(seed: &str, counter: u128) -> String {
+pub fn hash_entropy_seed(seed: &str, counter: u128) -> [u8; 32] {
     // Hash the random string using SHA3-256
     let mut hasher = Sha3_256::new();
     hasher.update(seed.as_bytes());
     hasher.update(counter.to_le_bytes()); // Add the counter to the input data
-    let hash = hasher.finalize();
-
-    // Return the hash as a hex-encoded string
-    format!("{hash:064x}")
+    hasher.finalize().into()
 }
 
 pub fn address_from_private_key(
-    private_key: &str,
+    private_key: &[u8; 32],
     address_buf: &mut H160,
 ) -> Result<(), Box<dyn Error>> {
-    // Parse the private key string to bytes and create a SecretKey
-    let private_key_bytes = hex::decode(private_key)?;
-    let secret_key = SecretKey::parse_slice(&private_key_bytes)?;
+    // Create a SecretKey
+    let secret_key = SecretKey::parse_slice(private_key)?;
 
     // Derive the PublicKey from the SecretKey
     let public_key = PublicKey::from_secret_key(&secret_key);

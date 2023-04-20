@@ -31,6 +31,15 @@ fn main() {
                 .takes_value(true)
                 .required(true),
         )
+        .arg(
+            Arg::with_name("leading")
+                .short("l")
+                .long("leading")
+                .value_name("LEADING")
+                .help("Set whether zero bytes are leading or total")
+                .takes_value(true)
+                .required(false),
+        )
         .get_matches();
 
     println!(
@@ -45,6 +54,11 @@ fn main() {
         .unwrap()
         .parse()
         .expect("Zero bytes must be a number");
+    let leading: bool = matches
+        .value_of("leading")
+        .unwrap_or("false")
+        .parse()
+        .expect("Leading must be a boolean");
 
     let num_threads = num_cpus::get();
     let found = Arc::new(AtomicBool::new(false));
@@ -61,7 +75,11 @@ fn main() {
             private_key = increment_hex_string(&private_key, nonce_step);
             address = address_from_private_key(&private_key).unwrap();
             contract_address = contract_address_from_sender(&address);
-            zero_byte_count = count_zero_bytes(&contract_address);
+            if leading {
+                zero_byte_count = count_leading_zero_bytes(&contract_address);
+            } else {
+                zero_byte_count = count_zero_bytes(&contract_address);
+            }
 
             if zero_byte_count >= zero_bytes {
                 found.store(true, Ordering::Relaxed);
@@ -78,12 +96,21 @@ fn main() {
             "Successfully generated in {} seconds",
             elapsed_time.as_secs()
         );
-        println!(
-            "Found address with {} zero bytes in {} seconds: {:?}",
-            zero_bytes,
-            elapsed_time.as_secs(),
-            contract_address
-        );
+        if leading {
+            println!(
+                "Found address with {} leading zero bytes in {} seconds: {:?}",
+                zero_bytes,
+                elapsed_time.as_secs(),
+                contract_address
+            );
+        } else {
+            println!(
+                "Found address with {} zero bytes in {} seconds: {:?}",
+                zero_bytes,
+                elapsed_time.as_secs(),
+                contract_address
+            );
+        }
         println!("Private key: {}", format!("0x{}", private_key));
     } else {
         println!("No matching address found.");
@@ -143,6 +170,14 @@ fn contract_address_from_sender(sender: &H160) -> H160 {
 
 fn count_zero_bytes(address: &H160) -> u8 {
     address.as_bytes().iter().filter(|&byte| *byte == 0).count() as u8
+}
+
+fn count_leading_zero_bytes(address: &H160) -> u8 {
+    address
+        .as_bytes()
+        .iter()
+        .take_while(|&byte| *byte == 0)
+        .count() as u8
 }
 
 fn increment_hex_string(hex_string: &str, step: u32) -> String {

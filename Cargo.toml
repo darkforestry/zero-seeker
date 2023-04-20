@@ -19,7 +19,7 @@ criterion = "0.4.0"
 
 
 [[bin]]
-path = "bin/zero_zeeker.rs"
+path = "bin/zero_seeker.rs"
 name = "zero_seeker"
 
 

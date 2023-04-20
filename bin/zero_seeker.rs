@@ -42,7 +42,7 @@ fn main() {
 
     // Run the search for the lower complexity value
     let start_time = Instant::now();
-    mine_address_with_n_zero_bytes(&args.entropy_seed, lower_complexity, args.leading);
+    zero_seeker::mine_address_with_n_zero_bytes(&args.entropy_seed, lower_complexity, args.leading);
     let elapsed_time = start_time.elapsed();
 
     // Calculate the ratio between the probabilities for the lower and target complexity values
@@ -65,9 +65,11 @@ fn main() {
         args.zero_bytes, days, hours, minutes, seconds
     );
 
-    if let Some((private_key, contract_address)) =
-        mine_address_with_n_zero_bytes(&args.entropy_seed, args.zero_bytes, args.leading)
-    {
+    if let Some((private_key, contract_address)) = zero_seeker::mine_address_with_n_zero_bytes(
+        &args.entropy_seed,
+        args.zero_bytes,
+        args.leading,
+    ) {
         let elapsed_time = start_time.elapsed();
         if args.leading {
             println!(

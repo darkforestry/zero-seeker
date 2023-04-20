@@ -11,7 +11,7 @@ use std::sync::Arc;
 use std::time::Instant;
 use tiny_keccak::{Hasher, Keccak};
 
-fn mine_address_with_n_zero_bytes(
+pub fn mine_address_with_n_zero_bytes(
     entropy_seed: &str,
     zero_bytes: u8,
     leading: bool,

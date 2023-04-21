@@ -21,7 +21,7 @@ Replace your_entropy_seed with a string that will be used as a seed for generati
 ## Security Considerations
 - Do not run this on an untrusted machine
 - Never share your entropy seed or private key
-- Make sure your entropy seed is irreproducible (the more characters the better)
+- Make sure your entropy seed is irreproducible (the longer the better)
 
 ## Todo
 

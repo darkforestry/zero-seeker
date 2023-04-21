@@ -5,7 +5,11 @@ use clap::Parser;
 #[clap(name = "ZeroSeeker", about = "")]
 
 pub struct Args {
-    #[clap(short, long, help = "Set the entropy seed")]
+    #[clap(
+        short,
+        long,
+        help = "Set the entropy seed, which must be at least 16 characters long"
+    )]
     pub entropy_seed: String,
     #[clap(short, long, help = "Set the desired number of total zero bytes")]
     pub zero_bytes: u8,
@@ -13,8 +17,14 @@ pub struct Args {
     pub leading: bool,
 }
 
-fn main() {
+fn main() -> Result<(), String> {
     let args = Args::parse();
+
+    if args.entropy_seed.len() < 16 {
+        return Err(format!(
+            "The entropy seed must be at least 16 characters long.",
+        ));
+    }
 
     let lower_complexity: u8;
     if args.leading {
@@ -81,4 +91,6 @@ fn main() {
     } else {
         println!("No matching address found.");
     }
+
+    Ok(())
 }

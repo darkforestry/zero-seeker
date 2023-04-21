@@ -8,7 +8,7 @@ pub struct Args {
     #[clap(
         short,
         long,
-        help = "Set the entropy seed, which must be at least 16 characters long"
+        help = "Set the entropy seed, which must be at least 32 characters long"
     )]
     pub entropy_seed: String,
     #[clap(short, long, help = "Set the desired number of total zero bytes")]
@@ -20,9 +20,9 @@ pub struct Args {
 fn main() -> Result<(), String> {
     let args = Args::parse();
 
-    if args.entropy_seed.len() < 16 {
+    if args.entropy_seed.len() < 32 {
         return Err(format!(
-            "The entropy seed must be at least 16 characters long.",
+            "The entropy seed must be at least 32 characters long.",
         ));
     }
 

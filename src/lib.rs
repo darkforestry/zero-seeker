@@ -2,6 +2,7 @@ use ethers::types::H160;
 use libsecp256k1::{PublicKey, SecretKey};
 use rayon::prelude::*;
 use rlp::RlpStream;
+use rug::{ops::Pow, Float};
 use sha3::{Digest, Keccak256, Sha3_256};
 use std::error::Error;
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -118,4 +119,39 @@ pub fn count_leading_zero_bytes(address: &H160) -> u8 {
         }
     }
     count
+}
+
+pub fn expected_attempts(zero_bytes: u64, leading: bool) -> f64 {
+    let total_bytes = 20u64;
+    let probability_zero = Float::with_val(53, 1) / Float::with_val(53, 256);
+    let probability_non_zero = Float::with_val(53, 1) - &probability_zero;
+
+    if leading {
+        let probability = probability_zero.pow(zero_bytes as i32);
+        1.0 / probability.to_f64()
+    } else {
+        let mut total_probability = Float::with_val(53, 0);
+
+        for combination in 0..combinations(total_bytes, zero_bytes) {
+            let probability = Float::with_val(53, combination)
+                * probability_zero.clone().pow(zero_bytes as i32)
+                * Float::with_val(53, probability_non_zero.clone())
+                    .pow((total_bytes - zero_bytes) as i32);
+            total_probability += probability;
+        }
+
+        1.0 / total_probability.to_f64()
+    }
+}
+
+fn combinations(n: u64, k: u64) -> u64 {
+    factorial(n) / (factorial(k) * factorial(n - k))
+}
+
+fn factorial(n: u64) -> u64 {
+    if n == 0 {
+        1
+    } else {
+        (1..=n).product()
+    }
 }

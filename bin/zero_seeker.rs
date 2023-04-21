@@ -47,8 +47,8 @@ fn main() -> Result<(), String> {
     let elapsed_time = start_time.elapsed();
 
     // Calculate the ratio between the probabilities for the lower and target complexity values
-    let ratio = (1.0 / 256.0f64.powi(lower_complexity as i32))
-        / (1.0 / 256.0f64.powi(args.zero_bytes as i32));
+    let ratio = zero_seeker::expected_attempts(args.zero_bytes as u64, args.leading)
+        / zero_seeker::expected_attempts(lower_complexity as u64, args.leading);
 
     // Estimate the time it would take to find a matching Ethereum address for the desired complexity value
     let estimated_time = elapsed_time.as_secs_f64() * ratio;

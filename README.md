@@ -18,6 +18,11 @@ cargo run --release -- -e "your_entropy_seed" -z number_of_zero_bytes [-l]
 
 Replace your_entropy_seed with a string that will be used as a seed for generating the private key, and number_of_zero_bytes with the desired number of zero bytes in the contract address. Use the -l flag to specify if you want to count leading zero bytes (flag) or total zero bytes (no flag).
 
+## Security Considerations
+- Do not run this on an untrusted machine
+- Never share your entropy seed or private key
+- Make sure your entropy seed is irreproducible (the more characters the better)
+
 ## Todo
 
 - [ ] Reduce code shitiness

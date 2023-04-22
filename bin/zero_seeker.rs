@@ -1,6 +1,7 @@
 use std::time::Instant;
 
 use clap::Parser;
+use zero_seeker::find_optimal_batch_size;
 #[derive(Parser, Default, Debug)]
 #[clap(name = "ZeroSeeker", about = "")]
 
@@ -43,7 +44,13 @@ fn main() -> Result<(), String> {
 
     // Run the search for the lower complexity value
     let start_time = Instant::now();
-    zero_seeker::mine_address_with_n_zero_bytes(&args.entropy_seed, lower_complexity, args.leading);
+    let batch_size = 200;
+    zero_seeker::mine_address_with_n_zero_bytes(
+        &args.entropy_seed,
+        lower_complexity,
+        args.leading,
+        batch_size,
+    );
     let elapsed_time = start_time.elapsed();
 
     // Calculate the ratio between the probabilities for the lower and target complexity values
@@ -70,6 +77,7 @@ fn main() -> Result<(), String> {
         &args.entropy_seed,
         args.zero_bytes,
         args.leading,
+        batch_size,
     ) {
         let elapsed_time = start_time.elapsed();
         if args.leading {

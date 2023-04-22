@@ -5,50 +5,71 @@ use rlp::RlpStream;
 use rug::{ops::Pow, Float};
 use sha3::{Digest, Keccak256, Sha3_256};
 use std::error::Error;
-use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Arc;
+use std::time::{Duration, Instant};
 use tiny_keccak::{Hasher, Keccak};
+
+pub fn find_optimal_batch_size(entropy_seed: &str, leading: bool) -> u64 {
+    let mut best_time = Duration::from_secs(1000000);
+    let mut best_batch_size = 10;
+    let mut current_batch_size = best_batch_size;
+
+    loop {
+        let start = Instant::now();
+        mine_address_with_n_zero_bytes(entropy_seed, 2, leading, current_batch_size);
+        let duration = start.elapsed();
+
+        if duration < best_time {
+            best_time = duration;
+            best_batch_size = best_batch_size * 2;
+            current_batch_size = best_batch_size;
+        } else {
+            current_batch_size = (current_batch_size as f64 / 1.5) as u64;
+            if current_batch_size < best_batch_size {
+                return best_batch_size;
+            }
+        }
+    }
+}
 
 pub fn mine_address_with_n_zero_bytes(
     entropy_seed: &str,
     zero_bytes: u8,
     leading: bool,
+    batch_size: u64,
 ) -> Option<(String, H160)> {
-    let num_threads: usize = num_cpus::get();
-    let found = Arc::new(AtomicBool::new(false));
+    let counter = Arc::new(AtomicU64::new(0));
 
-    let result: Option<(String, H160)> = (0..num_threads).into_par_iter().find_map_any(|_| {
-        let nonce_step = num_threads as u32;
-        let mut counter = 0u128;
+    loop {
+        let result = (0..batch_size).into_par_iter().find_map_any(|_| {
+            let mut address_buf = H160::default(); // Allocate the address buffer once, outside the loop
+            let mut contract_address_buf = H160::default(); // Allocate the contract address buffer once, outside the loop
 
-        let mut private_key = hash_entropy_seed(entropy_seed, counter);
-        let mut address_buf = H160::default(); // Allocate the address buffer once, outside the loop
-        let mut contract_address_buf = H160::default(); // Allocate the contract address buffer once, outside the loop
-        let mut zero_byte_count: u8 = 0;
-
-        while zero_byte_count < zero_bytes && !found.load(Ordering::Relaxed) {
-            counter += nonce_step as u128;
-            private_key = hash_entropy_seed(entropy_seed, counter);
+            counter.fetch_add(batch_size, Ordering::SeqCst);
+            let private_key =
+                hash_entropy_seed(entropy_seed, counter.load(Ordering::Relaxed) as u128);
             address_from_private_key(&private_key, &mut address_buf).unwrap();
             contract_address_from_sender(&address_buf, &mut contract_address_buf);
-            if leading {
-                zero_byte_count = count_leading_zero_bytes(&contract_address_buf);
+
+            let zero_byte_count = if leading {
+                count_leading_zero_bytes(&contract_address_buf)
             } else {
-                zero_byte_count = count_zero_bytes(&contract_address_buf);
-            }
+                count_zero_bytes(&contract_address_buf)
+            };
 
             if zero_byte_count >= zero_bytes {
-                found.store(true, Ordering::Relaxed);
-                return Some((hex::encode(private_key), contract_address_buf));
+                Some((hex::encode(private_key), contract_address_buf))
+            } else {
+                None
             }
+        });
+
+        if let Some(address_with_n_zero_bytes) = result {
+            return Some(address_with_n_zero_bytes);
         }
-
-        None
-    });
-
-    result
+    }
 }
-
 pub fn hash_entropy_seed(seed: &str, counter: u128) -> [u8; 32] {
     // Hash the random string using SHA3-256
     let mut hasher = Sha3_256::new();
